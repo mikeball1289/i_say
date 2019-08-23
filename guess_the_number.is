@@ -1,0 +1,11 @@
+I'll explain how to "play Guess the Number".
+First let n be a random number between zero and ninety-nine.
+Then tell me "I'm thinking of a number between zero and ninety-nine".
+Then ask me "Guess what it is?" and call it "my guess".
+Then as long as the value of "my guess" is different from the value of n,
+    then first, if the value of "my guess" is greater than the value of n, tell me "too high",
+        otherwise tell me "too low".
+    And lastly ask me "Guess again?" and call it "my guess".
+And lastly tell me "You got it right!".
+
+Let's "play Guess the Number"

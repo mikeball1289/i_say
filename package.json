@@ -1,0 +1,16 @@
+{
+  "name": "i_say",
+  "version": "1.0.0",
+  "description": "",
+  "main": "i_say.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^12.7.2",
+    "@types/readline-sync": "^1.4.3",
+    "readline-sync": "^1.4.10"
+  }
+}

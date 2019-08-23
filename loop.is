@@ -1,0 +1,3 @@
+Let counter be ten. As long as the value of counter is greater than zero,
+you first tell me the value of counter, and lastly let counter be the
+difference of the value of counter and one.
