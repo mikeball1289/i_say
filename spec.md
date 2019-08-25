@@ -24,31 +24,23 @@ Show me the value of "my number".
 
 ### Operators
 I Say supports a number of operators, some infix some prefix. The prefix operators are:
-
-`The sum of {a} and {b}` adds a and b
-
-`The product of {a} and {b}` multiplies a and b
-
-`The difference of {a} and {b}` subtracts b from a
-
-`The difference between {a} and {b}` takes the absolute difference between a and b, useful for writing more natural sentences.
+- `The sum of {a} and {b}` adds a and b
+- `The product of {a} and {b}` multiplies a and b
+- `The difference of {a} and {b}` subtracts b from a
+- `The difference between {a} and {b}` takes the absolute difference between a and b, useful for writing more natural sentences.
 
 The infix operators are
-
-`{a} divided by {b}` divides a by b
-
-`{a} is less than {b}` evaluates a < b
-
-`{a} is greater than {b}` evaluates a > b
-
-`{a} is equal to {b}` evaluates a == b
-
-`{a} is different from {b}` evaluates a != b
+- `{a} divided by {b}` divides a by b
+- `{a} is less than {b}` evaluates a < b
+- `{a} is greater than {b}` evaluates a > b
+- `{a} is equal to {b}` evaluates a == b
+- `{a} is different from {b}` evaluates a != b
 
 Infix operators are all always right associative (so `twelve divided by four divided by three` is 6) and there's no way to define evaluation order, so you'll need to use intermediate variables to make sure they evaluate correctly.
 
 ### Directives
-Because I Say doesn't have very robust assignment there are a number of state-changing directives. They are: `ask me` `let's` `increment` and `decrement` and are used like
+Because I Say doesn't have very robust assignment there are a number of state-changing directives. They are: `ask me`, `let's`, `increment`, and `decrement`.
+
 `Ask me "Give me a number:" and call it "my number".` prompts "Give me a number: " to the console and stores the user input in the variable "my number". Note that user input is parsed natively, so the input "forty-two" is the number 42.
 
 `Let's "add two numbers" where a is two and b is four and call it "the result".` calls the function "add two numbers" with parameters a = 2 and b = 4, and stores the result in "the result". See Functions for more details.
