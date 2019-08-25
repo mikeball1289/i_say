@@ -1,12 +1,14 @@
 import { ASTNode } from './ast';
-function consume(tokens: string[], matching: string): boolean {
+
+function consume(tokens: string[], matching: string, negativeLookahead?: string): boolean {
     const matchingTokens = matching.split(' ');
     if (matchingTokens.reduce((acc, t, i) => acc && t === tokens[i], true)) {
-        tokens.splice(0, matchingTokens.length);
-        return true;
-    } else {
-        return false;
+        if (!negativeLookahead || tokens[matchingTokens.length] != negativeLookahead) {
+            tokens.splice(0, matchingTokens.length);
+            return true;
+        }
     }
+    return false;
 }
 
 function consumeAssert(tokens: string[], matching: string, message = 'An error occurred') {
@@ -34,8 +36,14 @@ export function ast(tokens: string[]): ASTNode[] {
 function constructFunction(tokens: string[]): FunctionDeclaration | null {
     if (consume(tokens, 'i\'ll explain how to')) {
         const name = tokens.shift()!;
+        const params: Variable[] = [];
+        while (consume(tokens, 'i\'ll tell you what')) {
+            params.push({ type: 'variable', name: tokens.shift()! });
+            consumeAssert(tokens, 'is');
+            consume(tokens, 'and');
+        }
         const body = assertNonemptyStatement(constructStatement(tokens), tokens[0]);
-        return { type: 'function', name, body };
+        return { type: 'function', name, params, body };
     }
     return null;
 }
@@ -46,7 +54,7 @@ function constructStatement(tokens: string[]): StatementNode | null {
         consumeAssert(tokens, 'be', 'Assignment requires "be"');
         const value = constructValue(tokens);
         return { type: 'assignment', lhv: varName, rhv: value } as Assignment;
-    } else if (consume(tokens, 'first')) {
+    } else if (consume(tokens, 'first') || consume(tokens, 'you should')) {
         return statementBlock(tokens);
     } else if (consume(tokens, 'if')) {
         return ifStatement(tokens);
@@ -56,8 +64,33 @@ function constructStatement(tokens: string[]): StatementNode | null {
         return { type: 'print', value: constructValue(tokens) };
     } else if (consume(tokens, 'ask me')) {
         return promptStatement(tokens);
-    } else if (consume(tokens, 'let\'s') || consume(tokens, 'you')) {
-        return { type: 'call', name: tokens.shift()! };
+    } else if (consume(tokens, 'let\'s')) {
+        const name = tokens.shift()!;
+        const functionlocalscope: { [name: string]: ValueNode } = {};
+        if (consume(tokens, 'where')) {
+            do {
+                const paramname = tokens.shift()!;
+                consumeAssert(tokens, 'is');
+                const paramvalue = constructValue(tokens);
+                functionlocalscope[paramname] = paramvalue;
+            } while(consume(tokens, 'and', 'call'));
+        }
+        if (consume(tokens, 'and call it')) {
+            const readinto = { type: 'variable', name: tokens.shift()! } as Variable;
+            return { type: 'callandassign', name, functionlocalscope, readinto };
+        } else {
+            return { type: 'call', name, functionlocalscope };
+        }
+    } else if (consume(tokens, 'the answer is')) {
+        return { type: 'return', value: constructValue(tokens) };
+    } else if (consume(tokens, 'increment')) {
+        const lhv = { type: 'variable', name: tokens.shift()! } as Variable;
+        const rhv = { type: 'sum', lhs: lhv, rhs: { type: 'literal', value: 'one' } as LiteralNode } as ArithmeticNode;
+        return { type: "assignment", lhv, rhv };
+    } else if (consume(tokens, 'decrement')) {
+        const lhv = { type: 'variable', name: tokens.shift()! } as Variable;
+        const rhv = { type: 'difference', lhs: lhv, rhs: { type: 'literal', value: 'one' } as LiteralNode } as ArithmeticNode;
+        return { type: "assignment", lhv, rhv };
     }
     return null;
 }
@@ -100,7 +133,9 @@ function statementBlock(tokens: string[]): StatmentBlock {
     while (consume(tokens, 'then')) {
         statements.push(assertNonemptyStatement(constructStatement(tokens), tokens[0]));
     }
-    consumeAssert(tokens, 'and lastly', 'Statment block must end with lastly');
+    if (!consume(tokens, 'and lastly') && !consume(tokens, 'finally')) {
+        throw new CompilerError(tokens[0], 'Statment block must end with lastly');
+    }
     statements.push(assertNonemptyStatement(constructStatement(tokens), tokens[0]));
     return { type: 'block', statements };
 }
@@ -214,7 +249,7 @@ export interface RandomNumberNode {
     upperbound: ValueNode;
 }
 
-export type StatementNode = Assignment | StatmentBlock | IfStatement | IfElseStatement | PromptStatement | PrintStatement | WhileStatement | FunctionCallStatement;
+export type StatementNode = Assignment | StatmentBlock | IfStatement | IfElseStatement | PromptStatement | PrintStatement | WhileStatement | FunctionCallStatement | FunctionCallAndAssignStatement | ReturnStatement;
 
 export interface Assignment {
     type: 'assignment';
@@ -257,14 +292,28 @@ export interface WhileStatement {
     body: StatementNode;
 }
 
+export interface ReturnStatement {
+    type: 'return';
+    value: ValueNode;
+}
+
 export interface FunctionCallStatement {
     type: 'call';
     name: string;
+    functionlocalscope: { [name: string]: ValueNode };
+}
+
+export interface FunctionCallAndAssignStatement {
+    type: 'callandassign';
+    name: string;
+    functionlocalscope: { [name: string]: ValueNode };
+    readinto: Variable;
 }
 
 export interface FunctionDeclaration {
     type: 'function';
     name: string;
+    params: Variable[];
     body: StatementNode;
 }
 

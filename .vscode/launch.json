@@ -13,7 +13,7 @@
                 "${workspaceFolder}/**/*.js"
             ],
             "preLaunchTask": "tsc: build - tsconfig.json",
-            "args": ["loop.is"]
+            "args": ["fibs.is"]
         }
     ]
 }

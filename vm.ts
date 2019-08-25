@@ -1,9 +1,9 @@
-import { ASTNode, isValue, ValueNode, StatementNode, FunctionDeclaration } from './ast';
+import { ASTNode, isValue, ValueNode, StatementNode, FunctionDeclaration, FunctionCallStatement, StatmentBlock, FunctionCallAndAssignStatement } from './ast';
 import { question } from 'readline-sync';
 import { parseNumber } from './number';
 
 export function execute(program: ASTNode[], locals: Namespace = {}): Namespace {
-    for (let statement of program) {
+    for (const statement of program) {
         if (statement.type === 'function') {
             locals[statement.name] = statement;
         } else if (isValue(statement)) {
@@ -22,12 +22,16 @@ export function run(statement: StatementNode, locals: Namespace = {}): Namespace
             break;
         }
         case 'block': {
-            execute(statement.statements, locals);
+            runBlock(statement, locals);
             break;
         }
-        case 'call': {
-            // TODO: params
-            run((locals[statement.name] as FunctionDeclaration).body, locals);
+        case 'call':
+        case 'callandassign': {
+            runFunction(statement, locals);
+            break;
+        }
+        case 'return': {
+            locals['__return'] = evaluate(statement.value, locals);
             break;
         }
         case 'if': {
@@ -50,9 +54,31 @@ export function run(statement: StatementNode, locals: Namespace = {}): Namespace
         }
         case 'while': {
             while (evaluate(statement.condition, locals)) run(statement.body, locals);
+            break;
         }
     }
     return locals;
+}
+
+function runBlock(block: StatmentBlock, locals: Namespace = {}) {
+    for (const statement of block.statements) {
+        run(statement, locals);
+        if (locals.hasOwnProperty('__return')) {
+            break;
+        }
+    }
+}
+
+function runFunction(statement: FunctionCallStatement | FunctionCallAndAssignStatement, locals: Namespace = {}) {
+    assertParamsProvided(locals[statement.name], statement);
+    const functionscope: { [name: string]: any } = { ...locals };
+    for (const param of Object.keys(statement.functionlocalscope)) {
+        functionscope[param] = evaluate(statement.functionlocalscope[param], locals);
+    }
+    run((locals[statement.name] as FunctionDeclaration).body, functionscope);
+    if (statement.type === 'callandassign') {
+        locals[statement.readinto.name] = functionscope['__return'];
+    }
 }
 
 export function evaluate(value: ValueNode, locals: Namespace = {}): any {
@@ -76,6 +102,14 @@ export function evaluate(value: ValueNode, locals: Namespace = {}): any {
     }
 }
 
+function assertParamsProvided(declaration: FunctionDeclaration, call: FunctionCallStatement | FunctionCallAndAssignStatement) {
+    for (const param of declaration.params) {
+        if (!call.functionlocalscope.hasOwnProperty(param.name)) {
+            throw new RuntimeError(`Function call ${declaration.name} missing required parameter ${param.name}`);
+        }
+    }
+}
+
 function literal(value: string) {
     let n = parseNumber(value);
     if (isNaN(n)) {
@@ -84,10 +118,15 @@ function literal(value: string) {
     if (!isNaN(n)) {
         return n;
     }
-    const isStringToken = (t: string) => t.startsWith('"') && t.endsWith('"');
     return value === 'true' ? true : value === 'false' ? false : value;
 }
 
 export interface Namespace {
     [name: string]: any;
+}
+
+class RuntimeError extends Error {
+    constructor(public message: string) {
+        super();
+    }
 }

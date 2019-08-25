@@ -1,0 +1,12 @@
+I'll explain how to "calculate the nth fibonacci number" 
+I'll tell you what n is 
+First, if the value of n is less than two then the answer is one
+Then, decrement n, then let's "calculate the nth fibonacci number" where n is the value of n and call it a
+Then, decrement n, then let's "calculate the nth fibonacci number" where n is the value of n and call it b
+Finally, the answer is the sum of the value of a and the value of b
+
+Tell me "I can calculate fibonacci numbers!"
+Ask me "Which one should I calculate?" and call it n
+Let's "calculate the nth fibonacci number"
+Where n is the value of n and call it "the result"
+Tell me the value of "the result"

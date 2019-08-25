@@ -1,5 +1,5 @@
 import { ast } from './ast';
-import { execute, evaluate } from './vm';
+import { execute } from './vm';
 import { parse } from './parser';
 
 const sentinels = ['please', '?', 'ok?'];
